@@ -1,83 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  /* Force the background globally across all pages and the root container */
   html, body, #root {
-    background-color: #06080f !important;
-    @apply antialiased text-slate-200;
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-    width: 100%;
+    /* Subtle, professional "Off-White" background */
+    @apply antialiased min-h-screen bg-[#fafafa] text-slate-900;
+    font-family: 'Plus Jakarta Sans', sans-serif;
   }
 
-  body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
-  }
-
-  /* Standardize readable text sizes globally */
-  p, span, div, td, li, input {
-    font-size: 18px !important; 
-    @apply leading-relaxed tracking-wide font-medium;
-  }
-
-  /* Uniform style for the large Hero headers (e.g., "CLASSROOM", "WELCOME") */
+  /* REDUCED HEADINGS: Smaller, tighter, and more authoritative */
   h1 {
-    @apply font-black uppercase tracking-tighter text-white italic;
-    font-size: clamp(2rem, 10vw, 5.5rem) !important; 
-    line-height: 0.85;
+    @apply font-extrabold tracking-tight text-slate-900;
+    font-size: clamp(1.5rem, 5vw, 2.75rem) !important; /* Reduced from 5.5rem */
+    line-height: 1.1;
   }
 
-  /* Secondary headers and titles */
-  h2 { @apply text-2xl font-black tracking-tight text-white uppercase italic; }
-  h3 { @apply text-xl font-bold tracking-tight text-white uppercase; }
+  h2 { 
+    @apply text-lg font-bold tracking-tight text-slate-800 uppercase tracking-widest; 
+  }
 
-  /* Buttons - Consistent bold and clear style */
+  /* Standard text: Clean and readable without being "bulky" */
+  p, span, div, td, li {
+    @apply text-[14px] leading-relaxed text-slate-500 font-medium;
+  }
+
+  /* BUTTONS: Small, pill-shaped, and clean */
   button {
-    @apply font-black uppercase tracking-widest transition-all duration-200 active:scale-95;
-    font-size: 15px !important;
+    @apply font-bold uppercase tracking-wider transition-all duration-200 rounded-full px-5 py-2;
+    font-size: 11px !important;
   }
 
-  /* Input fields */
+  /* INPUTS: Minimalist with a soft shadow */
   input {
-    @apply bg-[#111622] border border-white/10 rounded-xl px-5 py-3 outline-none transition-all;
+    @apply bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-900 outline-none transition-all;
   }
   input:focus {
-    @apply border-indigo-500/50 ring-1 ring-indigo-500/20;
+    @apply border-indigo-500 ring-4 ring-indigo-500/10;
   }
 }
 
-/* Custom Deep Blue Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #06080f; }
-::-webkit-scrollbar-thumb { @apply bg-slate-800 rounded-full hover:bg-slate-700; }
-
-@layer base {
-  /* This targets the most common text tags and forces them to be normal (not italic) */
-  h1, h2, h3, h4, h5, h6, p, span, div, button, input, textarea {
-    font-style: normal !important;
+@layer components {
+  /* THE MODERN GRID CONTAINER */
+  .dashboard-card {
+    @apply bg-white border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.02),0_10px_40px_rgba(0,0,0,0.03)] rounded-[24px] p-8;
   }
 
-  /* If you want to be extra safe and ensure no utility ever triggers it */
-  .italic {
-    font-style: normal !important;
+  /* TABLE ROW: Subtle hover instead of heavy colors */
+  .table-row-clean {
+    @apply border-b border-slate-50 hover:bg-slate-50/50 transition-colors;
   }
 }
 
-/* index.css */
-.app-container {
-  max-width: 1440px; /* Prevents it from stretching to the edges of 4K screens */
-  margin: 0 auto;    /* Centers the whole app */
-}
-
-/* Make the main content area feel "Medium" */
-.main-content {
-  max-width: 1100px; /* This is the "Sweet Spot" for readability */
-  margin: 0 auto;
-  padding: 2rem;     /* Balanced spacing */
-}
+/* Minimalist Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { @apply bg-slate-200 rounded-full hover:bg-indigo-200; }
