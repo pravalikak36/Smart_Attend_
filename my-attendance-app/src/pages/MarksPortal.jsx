@@ -126,14 +126,14 @@ export default function MarksPortal({ teacher }) {
         <div className="w-full max-w-6xl mt-20">
           <div className="text-center mb-16">
              <p className="text-indigo-500 font-black text-xs tracking-[0.6em] uppercase mb-4">Classroom marks portal</p>
-             <h2 className="text-6xl font-black italic uppercase tracking-tighter">Select Classroom</h2>
+             <h2 className="text-6xl font-black uppercase tracking-tighter">Select Classroom</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-h-[65vh] overflow-y-auto pr-4 custom-scrollbar">
             {dashboardClasses.map((cls, i) => (
               <div key={i} onClick={() => setSearchParams({ name: cls.name, sub: cls.sub })}
                 className="group bg-white/[0.03] border border-white/5 p-12 rounded-[50px] cursor-pointer hover:bg-indigo-600 transition-all duration-500">
                 <span className="text-indigo-400 font-black text-xs tracking-[0.4em] group-hover:text-white/70 uppercase">{cls.sub}</span>
-                <h3 className="text-5xl font-black italic uppercase mt-6 mb-8 tracking-tighter leading-tight">{cls.name}</h3>
+                <h3 className="text-5xl font-black uppercase mt-6 mb-8 tracking-tighter leading-tight">{cls.name}</h3>
                 <p className="text-white/40 text-[10px] font-black uppercase tracking-widest group-hover:text-white">Enter Marksheet →</p>
               </div>
             ))}
@@ -151,7 +151,7 @@ export default function MarksPortal({ teacher }) {
             <button onClick={() => setSearchParams({})} className="bg-white/5 hover:bg-white/10 px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest text-indigo-400 transition-all border border-white/5">
               ← Switch Class
             </button>
-            <h1 className="text-8xl font-black italic tracking-tighter uppercase leading-none">
+            <h1 className="text-8xl font-black tracking-tighter uppercase leading-none">
               {selectedSubject}<span className="inline-block w-8"></span><span className="text-white/20">{selectedClassName}</span>
             </h1>
           </div>
@@ -193,7 +193,7 @@ export default function MarksPortal({ teacher }) {
                 <tbody>
                   {students.map((s, i) => (
                     <tr key={i}>
-                      <td className="py-4 text-3xl font-black italic uppercase tracking-tighter text-white/80">
+                      <td className="py-4 text-3xl font-black uppercase tracking-tighter text-white/80">
                         {s.name}
                       </td>
                       {tests.map(t => (
@@ -211,36 +211,68 @@ export default function MarksPortal({ teacher }) {
             </div>
           </div>
 
-          {/* CLASS EFFICIENCY SIDEBAR - LG:4 */}
-          <div className="lg:col-span-4 h-[750px]">
-            <div className="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-[60px] p-10 text-center shadow-2xl relative overflow-hidden h-full flex flex-col justify-center">
-              <h3 className="text-[12px] font-black uppercase tracking-[0.5em] mb-10 text-white/70">Class Efficiency</h3>
-              <div className="relative inline-flex items-center justify-center scale-110">
-                 <svg className="w-56 h-56 transform -rotate-90">
-                    <circle cx="112" cy="112" r="95" stroke="currentColor" strokeWidth="18" fill="transparent" className="text-black/20" />
-                    <circle cx="112" cy="112" r="95" stroke="currentColor" strokeWidth="18" fill="transparent" 
-                       strokeDasharray={597} strokeDashoffset={597 - (597 * Math.min(classAvg, 100)) / 100}
-                       className="text-white transition-all duration-1000 ease-out" strokeLinecap="round" />
-                 </svg>
-                 <div className="absolute flex flex-col items-center">
-                    <span className="text-7xl font-black italic tracking-tighter">{classAvg}%</span>
-                    <span className="text-[10px] font-black uppercase tracking-widest opacity-70">Avg Score</span>
-                 </div>
-              </div>
-              <div className="mt-14 bg-black/20 p-6 rounded-[35px] border border-white/10">
-                 <p className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-1">Scope</p>
-                 <p className="text-xl font-black italic uppercase">{reportFocus === 'overall' ? 'Total Cumulative' : reportFocus}</p>
-              </div>
+        {/* CLASS EFFICIENCY SIDEBAR */}
+        <div className="lg:col-span-4 h-[750px] flex flex-col gap-6">
+        <div className="flex-1 bg-white/[0.03] border border-white/10 rounded-[48px] p-10 flex flex-col items-center justify-between relative overflow-hidden backdrop-blur-xl shadow-2xl">
+            {/* Subtle Background Glow to add depth */}
+            <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-600/10 rounded-full blur-[100px]" />
+            
+            <div className="w-full text-left">
+            <h3 className="text-[10px] font-bold uppercase tracking-[0.4em] text-indigo-400 mb-2">Metrics Analysis</h3>
+            <h2 className="text-2xl font-extrabold uppercase tracking-tight text-white">Efficiency</h2>
             </div>
-          </div>
+
+            {/* REFINED PROGRESS RING (Non-childish version) */}
+            <div className="relative inline-flex items-center justify-center">
+            <svg className="w-64 h-64 transform -rotate-90">
+                <circle cx="128" cy="128" r="110" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-white/[0.05]" />
+                <circle cx="128" cy="128" r="110" stroke="currentColor" strokeWidth="8" fill="transparent" 
+                strokeDasharray={691} 
+                strokeDashoffset={691 - (691 * Math.min(classAvg, 100)) / 100}
+                className="text-indigo-500 transition-all duration-1000 ease-in-out" 
+                strokeLinecap="round" 
+                style={{ filter: 'drop-shadow(0 0 12px rgba(99, 102, 241, 0.4))' }}
+                />
+            </svg>
+            <div className="absolute flex flex-col items-center">
+                <span className="text-7xl font-extrabold tracking-tighter text-white leading-none">{classAvg}%</span>
+                <span className="text-[11px] font-bold uppercase tracking-widest text-white/30 mt-4">Avg Score</span>
+            </div>
+            </div>
+
+            {/* REFINED SCOPE BADGE */}
+            <div className="w-full bg-white/[0.05] border border-white/5 p-6 rounded-[30px] flex items-center justify-between">
+            <div>
+                <p className="text-[9px] font-bold uppercase tracking-widest text-white/20 mb-1">Current Scope</p>
+                <p className="text-sm font-bold text-indigo-400 uppercase tracking-wide">
+                {reportFocus === 'overall' ? 'Total Cumulative' : reportFocus}
+                </p>
+            </div>
+            <div className="h-2 w-2 rounded-full bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.8)] animate-pulse" />
+            </div>
         </div>
-      </div>
+
+        {/* BOTTOM QUICK STATS (To balance the height) */}
+        <div className="bg-indigo-600 rounded-[40px] p-8 flex items-center justify-between shadow-xl shadow-indigo-900/20">
+            <div>
+                <p className="text-white/50 text-[10px] font-bold uppercase tracking-widest">Students</p>
+                <p className="text-3xl font-extrabold text-white">{students.length}</p>
+            </div>
+            <div className="h-10 w-[1px] bg-white/20" />
+            <div className="text-right">
+                <p className="text-white/50 text-[10px] font-bold uppercase tracking-widest">Tests</p>
+                <p className="text-3xl font-extrabold text-white">{tests.length}</p>
+            </div>
+        </div>
+        </div>
       
       <style dangerouslySetInnerHTML={{ __html: `
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.2); border-radius: 10px; }
       `}} />
+        </div>
+      </div>
     </div>
   );
 }
