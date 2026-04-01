@@ -8,7 +8,8 @@ import Assignments from './pages/Assignments';
 import AttendanceHub from './pages/AttendanceHub';
 import Attendance from './pages/Attendance';
 import Login from './pages/Login'; 
-import Timetable from './pages/Timetable'; // IMPORTED TIMETABLE
+import Timetable from './pages/Timetable'; 
+import MarksPortal from './pages/MarksPortal';
 
 function App() {
   const [teacherData, setTeacherData] = useState(() => {
@@ -78,6 +79,7 @@ function App() {
               
               {/* TIMETABLE ROUTE ADDED HERE */}
               <Route path="/timetable" element={teacherData ? <Timetable teacher={teacherData} /> : <Navigate to="/login" />} />
+              <Route path="/marks-portal" element={teacherData ? <MarksPortal teacher={teacherData} /> : <Navigate to="/login" />} />
 
               {/* Redirects */}
               <Route path="/" element={<Navigate to={teacherData ? "/dashboard" : "/login"} />} />
