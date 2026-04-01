@@ -194,7 +194,16 @@ export default function Timetable({ teacher }) {
                     </button>
                     {activeLaunchMenu === index && (
                       <div className="absolute right-0 mt-4 w-44 bg-[#1a1f2e] border border-white/10 rounded-2xl shadow-3xl z-50 overflow-hidden">
-                        <button onClick={() => navigate('/attendance-hub')} className="w-full text-left p-4 text-[9px] font-black uppercase text-slate-400 hover:bg-white/5 border-b border-white/5 transition-colors">Attendance</button>
+                        {/* Inside Timetable.jsx - Launch Dropdown */}
+                        <button 
+                        onClick={() => { 
+                            navigate(`/attendance-hub?subject=${item.subject}&section=${item.section}`); 
+                            setActiveLaunchMenu(null); 
+                        }} 
+                        className="w-full text-left p-4 text-[9px] font-black uppercase text-slate-400 hover:bg-white/5 border-b border-white/5 transition-colors"
+                        >
+                        Attendance
+                        </button>
                         <button onClick={() => navigate('/assignments')} className="w-full text-left p-4 text-[9px] font-black uppercase text-slate-400 hover:bg-white/5 border-b border-white/5 transition-colors">Assignments</button>
                         <button className="w-full text-left p-4 text-[9px] font-black uppercase text-slate-700 cursor-not-allowed">Marks Portal</button>
                       </div>
