@@ -190,7 +190,7 @@ export default function Timetable({ teacher }) {
                       onClick={() => setActiveLaunchMenu(activeLaunchMenu === index ? null : index)}
                       className="bg-white text-black px-8 py-4 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-indigo-500 hover:text-white transition-all shadow-xl"
                     >
-                      Launch Hub
+                      Launch
                     </button>
                     {activeLaunchMenu === index && (
                       <div className="absolute right-0 mt-4 w-44 bg-[#1a1f2e] border border-white/10 rounded-2xl shadow-3xl z-50 overflow-hidden">
