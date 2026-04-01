@@ -6,6 +6,7 @@ import autoTable from 'jspdf-autotable';
 export default function Assignments({ teacher }) {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
+  const hasRedirected = useRef(false); // Ref to prevent re-triggering logic
 
   // --- STATES ---
   const [classes, setClasses] = useState([]);
@@ -24,9 +25,38 @@ export default function Assignments({ teacher }) {
   useEffect(() => {
     if (teacher?.email) {
       const saved = localStorage.getItem(`classes_${teacher.email}`);
-      if (saved) setClasses(JSON.parse(saved));
+      if (saved) {
+        const parsedClasses = JSON.parse(saved);
+        setClasses(parsedClasses);
+      }
     }
   }, [teacher, view]);
+
+  // --- SMART REDIRECT LOGIC ---
+  useEffect(() => {
+    if (classes.length > 0 && !hasRedirected.current) {
+      const query = new URLSearchParams(window.location.search);
+      const targetSubject = query.get('subject');
+      const targetSection = query.get('section');
+
+      if (targetSubject || targetSection) {
+        // Attempt to match based on Subject or Section Name
+        const matchedClass = classes.find(c => 
+          (targetSubject && c.sub?.toLowerCase() === targetSubject.toLowerCase()) || 
+          (targetSection && c.name?.toLowerCase() === targetSection.toLowerCase())
+        );
+
+        if (matchedClass) {
+          hasRedirected.current = true;
+          setSelectedClass(matchedClass);
+          setView('list');
+          
+          // Clear URL params so it doesn't force-redirect on manual navigation later
+          window.history.replaceState({}, '', window.location.pathname);
+        }
+      }
+    }
+  }, [classes]);
 
   useEffect(() => {
     if (selectedClass) {
@@ -42,7 +72,7 @@ export default function Assignments({ teacher }) {
     }
   }, [activeAssignment]);
 
-  // --- FILE HANDLER ---
+  // --- HANDLERS ---
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -145,7 +175,7 @@ export default function Assignments({ teacher }) {
         </div>
       </nav>
 
-      {/* 2. HEADER - Updated Heading Logic */}
+      {/* 2. HEADER */}
       <header className="w-full text-center py-10 mb-10 border-b border-white/5">
         <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white uppercase mb-4">
           {view === 'classes' ? 'Classroom' : view === 'list' ? 'Assignment Tracker' : 'Gradebook'}
@@ -175,7 +205,7 @@ export default function Assignments({ teacher }) {
           </div>
         )}
 
-        {/* VIEW: ASSIGNMENT TRACKER (List) */}
+        {/* VIEW: LIST */}
         {view === 'list' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div onClick={() => setShowAddModal(true)} 
@@ -206,25 +236,25 @@ export default function Assignments({ teacher }) {
           </div>
         )}
 
-        {/* VIEW: GRADEBOOK (Details) */}
+        {/* VIEW: GRADEBOOK */}
         {view === 'gradebook' && (
           <div className="w-full bg-[#111622] rounded-[40px] border border-white/5 shadow-3xl overflow-hidden">
             <div className="p-8 flex flex-col md:flex-row justify-between items-center border-b border-white/5 bg-white/[0.01] gap-4">
-               <div>
-                 <h2 className="text-2xl font-black text-white uppercase tracking-tight">{activeAssignment?.title}</h2>
-                 <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1">Class Data Management</p>
-               </div>
-               <button onClick={exportPDF} className="bg-white text-black px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all shadow-lg">Generate Report</button>
+                <div>
+                  <h2 className="text-2xl font-black text-white uppercase tracking-tight">{activeAssignment?.title}</h2>
+                  <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1">Class Data Management</p>
+                </div>
+                <button onClick={exportPDF} className="bg-white text-black px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all shadow-lg">Generate Report</button>
             </div>
             
             <div className="overflow-x-auto">
               <table className="w-full text-left">
-                <thead className="bg-[#0b0f1a] text-[22px] font-black uppercase tracking-widest text-slate-600">
+                <thead className="bg-[#0b0f1a] text-[10px] font-black uppercase tracking-widest text-slate-600">
                   <tr>
-                    <th className="p-10 border-b border-white/5">Candidate</th>
-                    <th className="p-10 text-center border-b border-white/5">Status</th>
-                    <th className="p-10 text-center border-b border-white/5">Score</th>
-                    <th className="p-10 text-center border-b border-white/5">Push</th>
+                    <th className="p-8 border-b border-white/5">Candidate</th>
+                    <th className="p-8 text-center border-b border-white/5">Status</th>
+                    <th className="p-8 text-center border-b border-white/5">Score</th>
+                    <th className="p-8 text-center border-b border-white/5">Push</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
@@ -272,7 +302,7 @@ export default function Assignments({ teacher }) {
         )}
       </main>
 
-      {/* MODAL: INITIALIZE TASK WITH UPLOAD */}
+      {/* MODAL: NEW ASSIGNMENT */}
       {showAddModal && (
         <div className="fixed inset-0 bg-[#06080f]/98 backdrop-blur-xl z-50 flex items-center justify-center p-6">
           <div className="bg-[#111622] w-full max-w-lg p-10 rounded-[40px] border border-white/10 shadow-3xl">
@@ -287,7 +317,6 @@ export default function Assignments({ teacher }) {
                 <input type="date" className="w-full bg-[#06080f] border border-white/10 rounded-2xl p-5 font-black text-white outline-none focus:border-indigo-600" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
               </div>
 
-              {/* UPLOAD ZONE */}
               <div className="space-y-2">
                 <label className="text-[9px] font-black uppercase text-slate-600 tracking-widest ml-1">Attachment</label>
                 <div onClick={() => fileInputRef.current.click()} className={`w-full py-8 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all ${selectedFile ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-white/5 bg-[#06080f] hover:border-indigo-500/50'}`}>

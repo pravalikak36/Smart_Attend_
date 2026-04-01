@@ -204,7 +204,17 @@ export default function Timetable({ teacher }) {
                         >
                         Attendance
                         </button>
-                        <button onClick={() => navigate('/assignments')} className="w-full text-left p-4 text-[9px] font-black uppercase text-slate-400 hover:bg-white/5 border-b border-white/5 transition-colors">Assignments</button>
+                        {/* Inside Timetable.jsx - Launch Dropdown */}
+                        <button 
+                        onClick={() => { 
+                            // Pass the subject and section to the Assignments Hub
+                            navigate(`/assignments?subject=${item.subject}&section=${item.section}`); 
+                            setActiveLaunchMenu(null); 
+                        }} 
+                        className="w-full text-left p-4 text-[9px] font-black uppercase text-slate-400 hover:bg-white/5 border-b border-white/5 transition-colors"
+                        >
+                        Assignments
+                        </button>
                         <button className="w-full text-left p-4 text-[9px] font-black uppercase text-slate-700 cursor-not-allowed">Marks Portal</button>
                       </div>
                     )}
