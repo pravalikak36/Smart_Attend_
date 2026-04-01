@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable'; // Import as a standalone function
 
 export default function Timetable({ teacher }) {
   const navigate = useNavigate();
@@ -30,7 +32,67 @@ export default function Timetable({ teacher }) {
     }
   }, [teacher?.email]);
 
-  // 3. LOGIC & HANDLERS
+  // 3. PDF GENERATION LOGIC (FIXED)
+  const generatePDF = () => {
+    if (!mappingName) {
+      alert("Please enter your name in the 'Teacher Identification' box first.");
+      return;
+    }
+    if (timetableData.length === 0) {
+      alert("No timetable data found. Please upload a CSV first.");
+      return;
+    }
+
+    try {
+      const doc = new jsPDF();
+      
+      const dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+      const filteredData = timetableData
+        .filter(item => item.instructor?.toLowerCase().includes(mappingName.toLowerCase()))
+        .sort((a, b) => dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day));
+
+      if (filteredData.length === 0) {
+        alert(`No records found for "${mappingName}".`);
+        return;
+      }
+
+      // Header
+      doc.setFontSize(20);
+      doc.setTextColor(40);
+      doc.text(`${mappingName.toUpperCase()} - FULL SCHEDULE`, 14, 22);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
+
+      const tableColumn = ["Day", "Time", "Subject", "Section", "Room"];
+      const tableRows = filteredData.map(item => [
+        item.day,
+        item.time,
+        item.subject,
+        item.section,
+        item.room
+      ]);
+
+      // FIXED: Use autoTable as a function rather than a method of doc
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 40,
+        styles: { fontSize: 9, font: "helvetica" },
+        headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255] },
+        alternateRowStyles: { fillColor: [245, 247, 250] },
+      });
+
+      doc.save(`${mappingName.replace(/\s+/g, '_')}_Timetable.pdf`);
+      setShowDotsMenu(false);
+    } catch (error) {
+      console.error("PDF Export Error:", error);
+      alert("Error generating PDF. Please ensure all libraries are loaded.");
+    }
+  };
+
+  // 4. HANDLERS
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -60,7 +122,6 @@ export default function Timetable({ teacher }) {
     const sub = encodeURIComponent(item.subject);
     const sec = encodeURIComponent(item.section);
     const path = type === 'attendance' ? '/attendance-hub' : '/assignments';
-    
     navigate(`${path}?subject=${sub}&section=${sec}`);
     setActiveLaunchMenu(null);
   };
@@ -110,7 +171,10 @@ export default function Timetable({ teacher }) {
             </div>
 
             <div className="relative">
-              <button onClick={() => setShowDotsMenu(!showDotsMenu)} className="p-4 hover:bg-white/5 rounded-full transition-all flex flex-col gap-1">
+              <button 
+                onClick={(e) => { e.stopPropagation(); setShowDotsMenu(!showDotsMenu); }} 
+                className="p-4 hover:bg-white/5 rounded-full transition-all flex flex-col gap-1 relative z-50"
+              >
                 <div className="w-1 h-1 bg-slate-500 rounded-full"></div>
                 <div className="w-1 h-1 bg-slate-500 rounded-full"></div>
                 <div className="w-1 h-1 bg-slate-500 rounded-full"></div>
@@ -119,10 +183,16 @@ export default function Timetable({ teacher }) {
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowDotsMenu(false)} />
                   <div className="absolute right-0 mt-4 w-56 bg-[#161b29] border border-white/10 rounded-2xl shadow-3xl z-50 overflow-hidden">
-                    <label className="block p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-white/5 cursor-pointer">
+                    <label className="block p-4 text-[15px] font-black uppercase tracking-widest text-slate-400 hover:bg-white/5 cursor-pointer border-b border-white/5 transition-colors">
                       Upload Holiday List
                       <input type="file" className="hidden" />
                     </label>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); generatePDF(); }}
+                      className="w-full text-left p-4 text-[10px] font-black uppercase tracking-widest text-indigo-400 hover:bg-indigo-500 hover:text-white transition-all"
+                    >
+                      Download PDF
+                    </button>
                   </div>
                 </>
               )}
@@ -181,7 +251,6 @@ export default function Timetable({ teacher }) {
                     </div>
                   </div>
 
-                  {/* LAUNCH DROPDOWN */}
                   <div className="relative">
                     <button 
                       onClick={(e) => {
@@ -196,18 +265,8 @@ export default function Timetable({ teacher }) {
                       <>
                         <div className="fixed inset-0 z-40" onClick={() => setActiveLaunchMenu(null)} />
                         <div className="absolute right-0 mt-4 w-44 bg-[#1a1f2e] border border-white/10 rounded-2xl shadow-3xl z-50 overflow-hidden">
-                          <button 
-                            onClick={() => handleLaunch('attendance', item)} 
-                            className="w-full text-left p-4 text-[9px] font-black uppercase text-slate-400 hover:bg-white/5 border-b border-white/5 transition-colors"
-                          >
-                            Attendance
-                          </button>
-                          <button 
-                            onClick={() => handleLaunch('assignment', item)} 
-                            className="w-full text-left p-4 text-[9px] font-black uppercase text-slate-400 hover:bg-white/5 border-b border-white/5 transition-colors"
-                          >
-                            Assignments
-                          </button>
+                          <button onClick={() => handleLaunch('attendance', item)} className="w-full text-left p-4 text-[9px] font-black uppercase text-slate-400 hover:bg-white/5 border-b border-white/5 transition-colors">Attendance</button>
+                          <button onClick={() => handleLaunch('assignment', item)} className="w-full text-left p-4 text-[9px] font-black uppercase text-slate-400 hover:bg-white/5 border-b border-white/5 transition-colors">Assignments</button>
                           <button className="w-full text-left p-4 text-[9px] font-black uppercase text-slate-700 cursor-not-allowed">Marks Portal</button>
                         </div>
                       </>
