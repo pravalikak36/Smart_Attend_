@@ -13,10 +13,11 @@ export default function Attendance() {
   const [subject, setSubject] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // --- NEW: LOCK STATE ---
+  const [isLocked, setIsLocked] = useState(false);
 
-  // --- LOGIC: FETCH CLASS & ATTENDANCE ---
   useEffect(() => {
-    // 1. Find the class across all teacher keys in localStorage
     const allKeys = Object.keys(localStorage).filter(k => k.startsWith('classes_'));
     let foundClass = null;
 
@@ -33,12 +34,17 @@ export default function Attendance() {
       setSubject(foundClass.sub || "");
       
       const storageKey = `attendance_${classId}_${date}`;
+      const lockKey = `lock_${classId}_${date}`; // Store lock status
+      
       const savedAttendance = localStorage.getItem(storageKey);
+      const savedLockStatus = localStorage.getItem(lockKey);
+
+      // Set lock status from storage
+      setIsLocked(savedLockStatus === 'true');
 
       if (savedAttendance) {
         setStudents(JSON.parse(savedAttendance));
       } else if (foundClass.students) {
-        // Handle both Array and Comma-Separated String formats
         const rawList = Array.isArray(foundClass.students) 
           ? foundClass.students 
           : foundClass.students.split(',').map(s => s.trim()).filter(s => s !== "");
@@ -46,18 +52,31 @@ export default function Attendance() {
         const studentObjects = rawList.map((name, index) => ({
           id: `stu-${index}-${Date.now()}`, 
           name: name,
-          enrollment: `STU-${index + 101}`, // Starting at 101 for a pro look
+          enrollment: `STU-${index + 101}`,
           status: 'Present' 
         }));
         setStudents(studentObjects);
       }
     } else {
-      // If class ID is invalid, send them back to the hub
       navigate('/attendance-hub');
     }
   }, [classId, date, navigate]);
+
+  // --- NEW: HANDLE LOCK/UNLOCK ---
+  const handleSaveAndLock = () => {
+    setIsLocked(true);
+    localStorage.setItem(`lock_${classId}_${date}`, 'true');
+    // Final save of data
+    localStorage.setItem(`attendance_${classId}_${date}`, JSON.stringify(students));
+  };
+
+  const handleEnableEdit = () => {
+    setIsLocked(false);
+    localStorage.setItem(`lock_${classId}_${date}`, 'false');
+  };
     
   const toggleStatus = (id, newStatus) => {
+    if (isLocked) return; // Prevent change if locked
     const updatedStudents = students.map(s => 
       s.id === id ? { ...s, status: newStatus } : s
     );
@@ -66,21 +85,16 @@ export default function Attendance() {
   };
     
   const markAllPresent = () => {
+    if (isLocked) return;
     const updatedStudents = students.map(s => ({...s, status: 'Present'}));
     setStudents(updatedStudents);
     localStorage.setItem(`attendance_${classId}_${date}`, JSON.stringify(updatedStudents));
   };
 
-  // --- EXPORT FUNCTIONS ---
+  // Export functions (unchanged)
   const exportToExcel = () => {
     if (students.length === 0) return alert("No student data to export.");
-    const excelData = students.map((s, i) => ({
-        "Sr No.": i + 1,
-        "Student Name": s.name,
-        "Enrollment ID": s.enrollment,
-        "Attendance Status": s.status,
-        "Date": date
-    }));
+    const excelData = students.map((s, i) => ({ "Sr No.": i + 1, "Student Name": s.name, "Enrollment ID": s.enrollment, "Attendance Status": s.status, "Date": date }));
     const ws = XLSX.utils.json_to_sheet(excelData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Attendance_Report");
@@ -97,40 +111,27 @@ export default function Attendance() {
     doc.text(`ATTENDANCE: ${currentClassName}`, 14, 22);
     doc.setFontSize(9); 
     doc.text(`Subject: ${subject} | Date: ${date}`, 14, 32);
-
-    autoTable(doc, {
-      startY: 45,
-      head: [['#', 'STUDENT NAME', 'ENROLLMENT', 'STATUS']],
-      body: students.map((s, i) => [i + 1, s.name, s.enrollment, s.status]),
-      theme: 'striped',
-      headStyles: { fillColor: [6, 8, 15], textColor: [255, 255, 255], fontStyle: 'bold' }
-    });
+    autoTable(doc, { startY: 45, head: [['#', 'STUDENT NAME', 'ENROLLMENT', 'STATUS']], body: students.map((s, i) => [i + 1, s.name, s.enrollment, s.status]), theme: 'striped', headStyles: { fillColor: [6, 8, 15], textColor: [255, 255, 255], fontStyle: 'bold' } });
     doc.save(`${currentClassName}_Report_${date}.pdf`);
   };
 
   const sendWhatsApp = () => {
     const absent = students.filter(s => s.status === 'Absent');
-    let msg = `*Attendance Report: ${currentClassName}*%0A*Subject:* ${subject}%0A*Date:* ${date}%0A%0A*Total Absent (${absent.length}):*%0A`;
-    absent.forEach((s, i) => msg += `${i + 1}. ${s.name}%0A`);
-    window.open(`https://wa.me/?text=${msg}`, '_blank');
+    let rawMsg = `*Attendance Report: ${currentClassName || "ISE"}*\n*Subject:* ${subject || "N/A"}\n*Date:* ${date}\n\n*Total Absent (${absent.length}):*\n`;
+    if (absent.length === 0) rawMsg += `All students are present!`;
+    else absent.forEach((s, i) => rawMsg += `${i + 1}. ${s.name}\n`);
+    window.open(`https://wa.me/?text=${encodeURIComponent(rawMsg)}`, '_blank');
   };
 
   return (
-    <div className="min-h-screen bg-[#06080f] text-slate-200 p-6 md:p-10 font-sans selection:bg-indigo-500/30 antialiased">
+    <div className="min-h-screen bg-[#06080f] text-slate-200 p-6 md:p-10 font-sans antialiased">
       <div className="max-w-4xl mx-auto mt-10">
         
         {/* --- HEADER --- */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 pb-8 border-b border-white/5 gap-6">
           <div className="relative">
-            <button 
-              onClick={() => navigate('/attendance-hub')} 
-              className="bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/5 mb-6 flex items-center gap-2"
-            >
-              ← All Classes
-            </button>
-            <h1 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter leading-none italic">
-              {currentClassName || "Session"}
-            </h1>
+            <button onClick={() => navigate('/attendance-hub')} className="bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/5 mb-6 flex items-center gap-2">← All Classes</button>
+            <h1 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter leading-none italic">{currentClassName || "Session"}</h1>
             <p className="text-indigo-500 text-[11px] font-black uppercase tracking-[0.4em] mt-3">{subject || "General Study"}</p>
           </div>
           
@@ -143,39 +144,53 @@ export default function Attendance() {
           </div>
         </header>
 
+        {/* --- CONTROL BAR --- */}
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 bg-[#111622] p-6 rounded-[30px] border border-white/5">
+          <div className="flex items-center gap-3">
+             <div className={`w-3 h-3 rounded-full ${isLocked ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500'}`} />
+             <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+               Status: {isLocked ? 'Locked (Final)' : 'Editing Mode'}
+             </span>
+          </div>
+
+          <div className="flex gap-3 w-full sm:w-auto">
+            {isLocked ? (
+              <button 
+                onClick={handleEnableEdit}
+                className="flex-1 sm:flex-none px-8 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl text-[10px] font-black uppercase tracking-widest border border-white/10 transition-all"
+              >
+                🔓 Unlock / Edit
+              </button>
+            ) : (
+              <button 
+                onClick={handleSaveAndLock}
+                className="flex-1 sm:flex-none px-8 py-3 bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 transition-all hover:scale-105 active:scale-95"
+              >
+                🔒 Save Changes
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* --- FILTERS --- */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           <div className="md:col-span-2">
             <label className="block text-[10px] font-black text-slate-500 uppercase mb-2 ml-1 tracking-widest">Search Students</label>
-            <input 
-              type="text" 
-              placeholder="Filter roster..." 
-              value={searchTerm} 
-              onChange={(e) => setSearchTerm(e.target.value)} 
-              className="w-full bg-[#111622] border border-white/5 rounded-2xl p-4 text-white focus:border-indigo-500 transition-all outline-none font-bold" 
-            />
+            <input type="text" placeholder="Filter students..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-[#111622] border border-white/5 rounded-2xl p-4 text-white outline-none font-bold focus:border-indigo-500" />
           </div>
           <div>
             <label className="block text-[10px] font-black text-slate-500 uppercase mb-2 ml-1 tracking-widest">Session Date</label>
-            <input 
-              type="date" 
-              value={date} 
-              onChange={(e) => setDate(e.target.value)} 
-              className="w-full bg-[#111622] border border-white/5 rounded-2xl p-4 text-white focus:border-indigo-500 outline-none cursor-pointer font-bold" 
-            />
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full bg-[#111622] border border-white/5 rounded-2xl p-4 text-white font-bold outline-none cursor-pointer" />
           </div>
         </div>
 
         {/* --- ROSTER TABLE --- */}
-        <div className="bg-[#111622]/50 border border-white/5 rounded-[40px] overflow-hidden shadow-2xl backdrop-blur-xl">
+        <div className={`bg-[#111622]/50 border border-white/5 rounded-[40px] overflow-hidden shadow-2xl backdrop-blur-xl ${isLocked ? 'opacity-80' : ''}`}>
           <div className="p-8 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
             <h3 className="font-black text-white uppercase tracking-widest text-[11px]">Attendance Roster</h3>
-            <button 
-              onClick={markAllPresent} 
-              className="text-[9px] font-black uppercase px-6 py-2.5 bg-emerald-500/10 text-emerald-400 border border-emerald-400/20 rounded-xl hover:bg-emerald-500 hover:text-white transition-all"
-            >
-              Mark All Present
-            </button>
+            {!isLocked && (
+              <button onClick={markAllPresent} className="text-[9px] font-black uppercase px-6 py-2.5 bg-emerald-500/10 text-emerald-400 border border-emerald-400/20 rounded-xl hover:bg-emerald-500 hover:text-white transition-all">Mark All Present</button>
+            )}
           </div>
 
           <div className="divide-y divide-white/5 max-h-[600px] overflow-y-auto custom-scrollbar">
@@ -186,12 +201,14 @@ export default function Attendance() {
                   <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em]">{student.enrollment}</p>
                 </div>
                 
-                <div className="flex bg-[#06080f] p-1.5 rounded-2xl border border-white/5 w-full sm:w-auto">
+                <div className={`flex bg-[#06080f] p-1.5 rounded-2xl border border-white/5 w-full sm:w-auto ${isLocked ? 'cursor-not-allowed opacity-50' : ''}`}>
                   <button 
+                    disabled={isLocked}
                     onClick={() => toggleStatus(student.id, 'Present')} 
                     className={`flex-1 sm:px-12 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${student.status === 'Present' ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "text-slate-600 hover:text-slate-400"}`}
                   >Present</button>
                   <button 
+                    disabled={isLocked}
                     onClick={() => toggleStatus(student.id, 'Absent')} 
                     className={`flex-1 sm:px-12 py-3.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${student.status === 'Absent' ? "bg-rose-500 text-white shadow-lg shadow-rose-500/20" : "text-slate-600 hover:text-slate-400"}`}
                   >Absent</button>

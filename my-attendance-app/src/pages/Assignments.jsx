@@ -191,7 +191,7 @@ export default function Assignments({ teacher }) {
       {/* 2. HEADER */}
       <header className="w-full text-center py-10 mb-10 border-b border-white/5">
         <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white uppercase mb-4">
-          {view === 'classes' ? 'Classroom' : view === 'list' ? 'Assignment Tracker' : 'Gradebook'}
+          {view === 'classes' ? 'Classroom' : view === 'list' ? 'Assignment   Tracker' : 'Gradebook'}
         </h1>
         {selectedClass && (
           <div className="flex justify-center items-center gap-4">
