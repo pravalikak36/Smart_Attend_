@@ -5,18 +5,36 @@ export default function Login({ onLogin }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false); // Toggle between Login/Sign Up
+  const [error, setError] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
 
-    // Simulate a professional network delay (800ms)
+    // The key used to store the password for this specific email
+    const storageKey = `auth_pwd_${email.toLowerCase().trim()}`;
+    const savedPassword = localStorage.getItem(storageKey);
+
     setTimeout(() => {
-      if (email && password) {
-        onLogin({ 
-          name: email.split('@')[0], 
-          email: email 
-        });
+      if (isSignUp) {
+        // --- SIGN UP LOGIC ---
+        if (savedPassword) {
+          setError('ACCOUNT ALREADY EXISTS. PLEASE LOGIN.');
+        } else {
+          localStorage.setItem(storageKey, password);
+          onLogin({ name: email.split('@')[0], email: email });
+        }
+      } else {
+        // --- LOGIN LOGIC ---
+        if (!savedPassword) {
+          setError('NO ACCOUNT FOUND. PLEASE SIGN UP FIRST.');
+        } else if (savedPassword !== password) {
+          setError('INCORRECT SECURITY KEY.');
+        } else {
+          onLogin({ name: email.split('@')[0], email: email });
+        }
       }
       setIsLoading(false);
     }, 800);
@@ -31,7 +49,9 @@ export default function Login({ onLogin }) {
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-10">
           <h1 className="text-4xl font-black text-white tracking-tighter">Smart<span className="text-indigo-500">Attend</span></h1>
-          <p className="text-slate-500 text-sm mt-2 font-medium tracking-wide">Secure Faculty Gateway</p>
+          <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.4em] mt-2">
+            {isSignUp ? 'Create Faculty Account' : 'Secure Faculty Gateway'}
+          </p>
         </div>
 
         <div className="bg-[#161b2a]/40 backdrop-blur-2xl border border-white/10 p-10 rounded-[45px] shadow-2xl shadow-black/50">
@@ -49,49 +69,59 @@ export default function Login({ onLogin }) {
               />
             </div>
 
-            {/* Password Field with Toggle */}
+            {/* Password Field */}
             <div className="relative">
-              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Security Key</label>
+              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">
+                {isSignUp ? 'Set Security Key' : 'Security Key'}
+              </label>
               <input 
                 type={showPassword ? "text" : "password"} 
                 required
-                className="w-full bg-[#0b0f1a]/50 border border-slate-800 rounded-2xl p-4 text-white outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
+                className={`w-full bg-[#0b0f1a]/50 border ${error ? 'border-red-500/50' : 'border-slate-800'} rounded-2xl p-4 text-white outline-none focus:border-indigo-500 transition-all`}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
               <button 
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-[38px] text-slate-600 hover:text-indigo-400 transition-colors"
+                className="absolute right-4 top-[38px] text-slate-600 hover:text-indigo-400 font-bold text-[10px]"
               >
-                {showPassword ? "Hide" : "Show"}
+                {showPassword ? "HIDE" : "SHOW"}
               </button>
             </div>
 
-            {/* Login Button with Loading Logic */}
+            {/* Error Message */}
+            {error && (
+              <p className="text-red-500 text-[9px] font-black uppercase tracking-widest ml-1 animate-pulse">
+                {error}
+              </p>
+            )}
+
+            {/* Submit Button */}
             <button 
               type="submit"
               disabled={isLoading}
-              className={`w-full font-bold py-4 rounded-2xl transition-all flex items-center justify-center gap-3 mt-4 ${
-                isLoading 
-                ? "bg-slate-800 text-slate-500 cursor-not-allowed" 
-                : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 active:scale-95"
-              }`}
+              className="w-full font-black py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 active:scale-95 transition-all mt-4"
             >
-              {isLoading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-slate-500 border-t-white rounded-full animate-spin" />
-                  <span>Verifying...</span>
-                </>
-              ) : (
-                "LOGIN"
-              )}
+              {isLoading ? 'VERIFYING...' : isSignUp ? 'CREATE ACCOUNT' : 'LOGIN'}
             </button>
           </form>
 
+          {/* NEW USER / SIGN UP TOGGLE */}
+          <div className="mt-8 text-center">
+            <button 
+              onClick={() => {
+                setIsSignUp(!isSignUp);
+                setError('');
+              }}
+              className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] hover:text-indigo-400 transition-colors"
+            >
+              {isSignUp ? '← Back to Login' : 'New Faculty? Create Account'}
+            </button>
+          </div>
+
           <div className="mt-8 pt-8 border-t border-slate-800/30 flex justify-between items-center text-[10px] font-bold text-slate-600 uppercase tracking-tighter">
             <span className="hover:text-indigo-400 cursor-pointer">Support</span>
-            <span className="hover:text-indigo-400 cursor-pointer">Privacy Policy</span>
             <span className="text-slate-800">•</span>
             <span className="text-emerald-500/60">System Online</span>
           </div>
