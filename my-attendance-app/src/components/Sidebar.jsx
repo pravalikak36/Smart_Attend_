@@ -24,17 +24,20 @@ export default function Sidebar({ onLogout }) {
       name: 'Timetable', 
       path: '/timetable', 
       icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' 
-    }, // ADDED THIS
+    },
+    { 
+      name: 'Marks Portal', 
+      path: '/marks-portal', 
+      icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' 
+    }, // ADDED MARKS PORTAL HERE
   ];
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-20 hover:w-64 bg-[#111622] border-r border-white/5 transition-all duration-300 z-50 group flex flex-col overflow-hidden">
-      {/* Branding */}
       <div className="p-6 mb-10">
         <div className="w-8 h-8 bg-indigo-600 rounded-lg flex-shrink-0 flex items-center justify-center font-black text-white shadow-lg shadow-indigo-600/20">S</div>
       </div>
 
-      {/* Nav Links */}
       <nav className="flex-1 px-4 space-y-4">
         {menuItems.map((item) => (
           <Link 
@@ -56,7 +59,6 @@ export default function Sidebar({ onLogout }) {
         ))}
       </nav>
 
-      {/* Logout */}
       <div className="p-4 border-t border-white/5">
         <button 
           onClick={onLogout}
