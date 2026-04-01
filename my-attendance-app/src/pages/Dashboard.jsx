@@ -1,24 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function Dashboard({ teacher, classes, addClass, setClasses, handleLogout }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newClassInput, setNewClassInput] = useState({ name: '', sub: '' });
   const [editingClass, setEditingClass] = useState(null);
   const [studentList, setStudentList] = useState("");
+  
+  // --- NEW: STATE FOR PROFILE NAME ---
+  const [displayName, setDisplayName] = useState(teacher?.name || 'Teacher');
 
-  React.useEffect(() => {
+  // --- NEW: EFFECT TO SYNC NAME WITH PROFILE PAGE ---
+  useEffect(() => {
+    const savedProfile = localStorage.getItem(`profile_v1_${teacher?.email}`);
+    if (savedProfile) {
+      const data = JSON.parse(savedProfile);
+      if (data.name) setDisplayName(data.name);
+    } else {
+      setDisplayName(teacher?.name || 'Teacher');
+    }
+  }, [teacher?.email, teacher?.name]);
+
+  useEffect(() => {
     const query = new URLSearchParams(window.location.search);
     if (query.get('autoCreate') === 'true') {
-      // 1. Open the modal
       setIsModalOpen(true);
-      
-      // 2. Pre-fill the inputs with the missing class details from the URL
       setNewClassInput({
         name: query.get('name') || '',
         sub: query.get('sub') || ''
       });
-
-      // 3. Clean the URL so it doesn't pop up again if the user refreshes
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, []);
@@ -64,11 +73,12 @@ export default function Dashboard({ teacher, classes, addClass, setClasses, hand
         <header className="flex flex-col md:flex-row justify-between items-end mb-12 pb-8 border-b border-white/5 gap-8">
           <div className="flex flex-col items-start">
             <p className="text-indigo-500 text-[10px] font-black uppercase tracking-[0.4em] mb-3">Teacher Hub</p>
+            
+            {/* UPDATED: USES DISPLAYNAME FROM PROFILE DATA */}
             <h1 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter leading-none mb-6">
-              Welcome, {teacher?.name || 'Teacher'}
+              Welcome, {displayName}
             </h1>
             
-            {/* LOGOUT BUTTON - POSITIONED IN THE SAME PLACE */}
             <button 
               onClick={handleLogout} 
               className="bg-rose-600/10 hover:bg-rose-600 text-rose-500 hover:text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-rose-600/20 shadow-lg shadow-rose-900/10 active:scale-95"
@@ -85,7 +95,7 @@ export default function Dashboard({ teacher, classes, addClass, setClasses, hand
           </button>
         </header>
 
-        {/* CLASS CARDS GRID */}
+        {/* ... (rest of the component remains exactly as you provided) */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {classes.length === 0 ? (
             <div className="col-span-full py-28 text-center border-2 border-dashed border-white/5 rounded-[45px] text-slate-700 font-black uppercase tracking-[0.3em]">
@@ -134,7 +144,7 @@ export default function Dashboard({ teacher, classes, addClass, setClasses, hand
         <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] flex items-center justify-center p-6">
           <form 
             onSubmit={handleCreate} 
-            className="bg-[#111622] p-10 rounded-[45px] border border-white/10 w-full max-w-md shadow-3xl"
+            className="bg-[#111622] p-10 rounded-[45px] border border-white/10 w-full max-md shadow-3xl"
           >
             <h3 className="text-2xl font-black text-white uppercase mb-8 tracking-tighter">Set Up Class</h3>
             <div className="space-y-4 mb-10">
