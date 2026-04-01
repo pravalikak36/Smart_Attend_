@@ -3,15 +3,15 @@ import { useNavigate } from 'react-router-dom';
 
 export default function Timetable({ teacher }) {
   const navigate = useNavigate();
-  // 1. STATE: Keep all original + new menu states
+  
+  // 1. STATE
   const [timetableData, setTimetableData] = useState([]);
-  const [holidayList, setHolidayList] = useState([]); // New auto-holiday list
+  const [holidayList, setHolidayList] = useState([]); 
   const [holidays, setHolidays] = useState(["2026-01-26", "2026-08-15", "2026-10-02"]);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [mappingName, setMappingName] = useState(""); 
   const [isUploading, setIsUploading] = useState(false);
   
-  // Menu Visibility States
   const [showDotsMenu, setShowDotsMenu] = useState(false);
   const [activeLaunchMenu, setActiveLaunchMenu] = useState(null);
 
@@ -30,7 +30,7 @@ export default function Timetable({ teacher }) {
     }
   }, [teacher?.email]);
 
-  // 3. LOGIC
+  // 3. LOGIC & HANDLERS
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -56,21 +56,13 @@ export default function Timetable({ teacher }) {
     reader.readAsText(file);
   };
 
-  const handleHolidayListUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const rows = event.target.result.split('\n').slice(1);
-      const parsed = rows.map(row => {
-        const [date, name] = row.split(',');
-        return { date: date?.trim(), name: name?.trim() };
-      }).filter(h => h.date);
-      setHolidayList(parsed);
-      localStorage.setItem(`holiday_list_${teacher.email}`, JSON.stringify(parsed));
-      setShowDotsMenu(false);
-    };
-    reader.readAsText(file);
+  const handleLaunch = (type, item) => {
+    const sub = encodeURIComponent(item.subject);
+    const sec = encodeURIComponent(item.section);
+    const path = type === 'attendance' ? '/attendance-hub' : '/assignments';
+    
+    navigate(`${path}?subject=${sub}&section=${sec}`);
+    setActiveLaunchMenu(null);
   };
 
   const currentDayName = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(new Date(selectedDate));
@@ -95,7 +87,7 @@ export default function Timetable({ teacher }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#06080f] text-slate-200 p-6 md:p-12 font-sans overflow-y-auto">
+    <div className="min-h-screen bg-[#06080f] text-slate-200 p-6 md:p-12 font-sans overflow-y-auto selection:bg-indigo-500/30">
       <div className="max-w-4xl mx-auto">
         
         {/* TOP BAR */}
@@ -105,7 +97,7 @@ export default function Timetable({ teacher }) {
             <h1 className="text-5xl font-black text-white uppercase tracking-tighter leading-none mb-4 italic">Timetable</h1>
             <input 
               type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)}
-              className="bg-[#111622] border border-white/5 rounded-xl px-4 py-2 text-[10px] font-black uppercase text-indigo-400 outline-none"
+              className="bg-[#111622] border border-white/5 rounded-xl px-4 py-2 text-[10px] font-black uppercase text-indigo-400 outline-none focus:border-indigo-500/50 transition-all"
             />
           </div>
 
@@ -117,7 +109,6 @@ export default function Timetable({ teacher }) {
               </button>
             </div>
 
-            {/* THREE DOTS DROPDOWN */}
             <div className="relative">
               <button onClick={() => setShowDotsMenu(!showDotsMenu)} className="p-4 hover:bg-white/5 rounded-full transition-all flex flex-col gap-1">
                 <div className="w-1 h-1 bg-slate-500 rounded-full"></div>
@@ -125,15 +116,15 @@ export default function Timetable({ teacher }) {
                 <div className="w-1 h-1 bg-slate-500 rounded-full"></div>
               </button>
               {showDotsMenu && (
-                <div className="absolute right-0 mt-4 w-56 bg-[#161b29] border border-white/10 rounded-2xl shadow-3xl z-50 overflow-hidden">
-                  <label className="block p-4 text-[16px] font-black uppercase tracking-widest text-slate-400 hover:bg-white/5 cursor-pointer">
-                    Upload Holiday List
-                    <input type="file" className="hidden" onChange={handleHolidayListUpload} />
-                  </label>
-                  <button className="w-full text-left p-4 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:bg-white/5 border-t border-white/5">
-                    Download Schedule
-                  </button>
-                </div>
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowDotsMenu(false)} />
+                  <div className="absolute right-0 mt-4 w-56 bg-[#161b29] border border-white/10 rounded-2xl shadow-3xl z-50 overflow-hidden">
+                    <label className="block p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-white/5 cursor-pointer">
+                      Upload Holiday List
+                      <input type="file" className="hidden" />
+                    </label>
+                  </div>
+                </>
               )}
             </div>
           </div>
@@ -147,8 +138,10 @@ export default function Timetable({ teacher }) {
               <p className="text-slate-500 text-[10px] font-bold uppercase leading-relaxed">Map CSV Name (e.g., "P. KIRAN")</p>
             </div>
             <input 
-              type="text" value={mappingName} onChange={(e) => { setMappingName(e.target.value); localStorage.setItem(`mapping_name_${teacher.email}`, e.target.value); }}
-              placeholder="Map Name..." className="w-full md:w-72 bg-[#06080f] border border-white/5 rounded-2xl p-5 text-white font-black uppercase text-xs tracking-[0.2em] focus:border-indigo-500 outline-none transition-all shadow-inner"
+              type="text" value={mappingName} 
+              onChange={(e) => { setMappingName(e.target.value); localStorage.setItem(`mapping_name_${teacher.email}`, e.target.value); }}
+              placeholder="Map Name..." 
+              className="w-full md:w-72 bg-[#06080f] border border-white/5 rounded-2xl p-5 text-white font-black uppercase text-xs tracking-[0.2em] focus:border-indigo-500 outline-none transition-all"
             />
           </div>
         </div>
@@ -164,9 +157,13 @@ export default function Timetable({ teacher }) {
               </p>
             </div>
           ) : !mappingName ? (
-            <div className="p-20 text-center border border-dashed border-white/10 rounded-[55px]"><p className="text-slate-700 font-black uppercase tracking-widest text-[11px]">Assign Name to View Schedule</p></div>
+            <div className="p-20 text-center border border-dashed border-white/10 rounded-[55px]">
+              <p className="text-slate-700 font-black uppercase tracking-widest text-[11px]">Assign Name to View Schedule</p>
+            </div>
           ) : myClasses.length === 0 ? (
-            <div className="bg-[#111622]/40 p-20 rounded-[55px] border border-white/5 text-center"><h2 className="text-xl font-black text-slate-800 uppercase italic">Zero Sessions Detected</h2></div>
+            <div className="bg-[#111622]/40 p-20 rounded-[55px] border border-white/5 text-center">
+              <h2 className="text-xl font-black text-slate-800 uppercase italic">Zero Sessions Detected</h2>
+            </div>
           ) : (
             myClasses.map((item, index) => (
               <div key={index} className="relative group">
@@ -187,36 +184,33 @@ export default function Timetable({ teacher }) {
                   {/* LAUNCH DROPDOWN */}
                   <div className="relative">
                     <button 
-                      onClick={() => setActiveLaunchMenu(activeLaunchMenu === index ? null : index)}
-                      className="bg-white text-black px-8 py-4 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-indigo-500 hover:text-white transition-all shadow-xl"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveLaunchMenu(activeLaunchMenu === index ? null : index);
+                      }}
+                      className="bg-white text-black px-8 py-4 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-indigo-500 hover:text-white transition-all shadow-xl relative z-50"
                     >
                       Launch
                     </button>
                     {activeLaunchMenu === index && (
-                      <div className="absolute right-0 mt-4 w-44 bg-[#1a1f2e] border border-white/10 rounded-2xl shadow-3xl z-50 overflow-hidden">
-                        {/* Inside Timetable.jsx - Launch Dropdown */}
-                        <button 
-                        onClick={() => { 
-                            navigate(`/attendance-hub?subject=${item.subject}&section=${item.section}`); 
-                            setActiveLaunchMenu(null); 
-                        }} 
-                        className="w-full text-left p-4 text-[9px] font-black uppercase text-slate-400 hover:bg-white/5 border-b border-white/5 transition-colors"
-                        >
-                        Attendance
-                        </button>
-                        {/* Inside Timetable.jsx - Launch Dropdown */}
-                        <button 
-                        onClick={() => { 
-                            // Pass the subject and section to the Assignments Hub
-                            navigate(`/assignments?subject=${item.subject}&section=${item.section}`); 
-                            setActiveLaunchMenu(null); 
-                        }} 
-                        className="w-full text-left p-4 text-[9px] font-black uppercase text-slate-400 hover:bg-white/5 border-b border-white/5 transition-colors"
-                        >
-                        Assignments
-                        </button>
-                        <button className="w-full text-left p-4 text-[9px] font-black uppercase text-slate-700 cursor-not-allowed">Marks Portal</button>
-                      </div>
+                      <>
+                        <div className="fixed inset-0 z-40" onClick={() => setActiveLaunchMenu(null)} />
+                        <div className="absolute right-0 mt-4 w-44 bg-[#1a1f2e] border border-white/10 rounded-2xl shadow-3xl z-50 overflow-hidden">
+                          <button 
+                            onClick={() => handleLaunch('attendance', item)} 
+                            className="w-full text-left p-4 text-[9px] font-black uppercase text-slate-400 hover:bg-white/5 border-b border-white/5 transition-colors"
+                          >
+                            Attendance
+                          </button>
+                          <button 
+                            onClick={() => handleLaunch('assignment', item)} 
+                            className="w-full text-left p-4 text-[9px] font-black uppercase text-slate-400 hover:bg-white/5 border-b border-white/5 transition-colors"
+                          >
+                            Assignments
+                          </button>
+                          <button className="w-full text-left p-4 text-[9px] font-black uppercase text-slate-700 cursor-not-allowed">Marks Portal</button>
+                        </div>
+                      </>
                     )}
                   </div>
                 </div>

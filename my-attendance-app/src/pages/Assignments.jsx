@@ -32,31 +32,44 @@ export default function Assignments({ teacher }) {
     }
   }, [teacher, view]);
 
-  // --- SMART REDIRECT LOGIC ---
+  // --- SMART REDIRECT & AUTO-CREATE LOGIC ---
   useEffect(() => {
+    // We wait for classes to load from localStorage before checking
     if (classes.length > 0 && !hasRedirected.current) {
       const query = new URLSearchParams(window.location.search);
       const targetSubject = query.get('subject');
       const targetSection = query.get('section');
 
       if (targetSubject || targetSection) {
-        // Attempt to match based on Subject or Section Name
+        // 1. Attempt to find the class
         const matchedClass = classes.find(c => 
           (targetSubject && c.sub?.toLowerCase() === targetSubject.toLowerCase()) || 
           (targetSection && c.name?.toLowerCase() === targetSection.toLowerCase())
         );
 
         if (matchedClass) {
+          // SUCCESS: Go to the assignment list
           hasRedirected.current = true;
           setSelectedClass(matchedClass);
           setView('list');
           
-          // Clear URL params so it doesn't force-redirect on manual navigation later
+          // Clear URL params for a clean UI
           window.history.replaceState({}, '', window.location.pathname);
+        } else {
+          // FAILURE: Redirect to Dashboard to create the missing class
+          hasRedirected.current = true;
+          navigate(`/dashboard?autoCreate=true&sub=${targetSubject || ''}&name=${targetSection || ''}`, { replace: true });
         }
       }
+    } else if (classes.length === 0 && !hasRedirected.current) {
+        // Handle case where teacher has NO classes created yet but tries to launch
+        const query = new URLSearchParams(window.location.search);
+        if (query.get('subject')) {
+             hasRedirected.current = true;
+             navigate(`/dashboard?autoCreate=true&sub=${query.get('subject')}&name=${query.get('section') || ''}`, { replace: true });
+        }
     }
-  }, [classes]);
+  }, [classes, navigate]);
 
   useEffect(() => {
     if (selectedClass) {

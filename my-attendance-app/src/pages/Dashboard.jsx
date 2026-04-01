@@ -6,6 +6,23 @@ export default function Dashboard({ teacher, classes, addClass, setClasses, hand
   const [editingClass, setEditingClass] = useState(null);
   const [studentList, setStudentList] = useState("");
 
+  React.useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+    if (query.get('autoCreate') === 'true') {
+      // 1. Open the modal
+      setIsModalOpen(true);
+      
+      // 2. Pre-fill the inputs with the missing class details from the URL
+      setNewClassInput({
+        name: query.get('name') || '',
+        sub: query.get('sub') || ''
+      });
+
+      // 3. Clean the URL so it doesn't pop up again if the user refreshes
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
   const handleCreate = (e) => {
     e.preventDefault();
     if (!newClassInput.name) return;

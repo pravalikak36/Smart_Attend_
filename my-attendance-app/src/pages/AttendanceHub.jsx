@@ -6,28 +6,36 @@ export default function AttendanceHub({ classes = [] }) {
   const location = useLocation();
   const hasRedirected = useRef(false); // Prevents loop in StrictMode
 
+  // --- SMART REDIRECT & AUTO-CREATE LOGIC ---
   useEffect(() => {
     const query = new URLSearchParams(location.search);
     const targetSubject = query.get('subject');
     const targetSection = query.get('section');
 
+    // Only run if a subject is being passed from the Timetable
     if (targetSubject && !hasRedirected.current) {
-      // Find a class in your dashboard that matches the Timetable subject or name
+      
+      // 1. Try to find the class in the existing list
       const matchedClass = classes.find(c => 
         c.sub?.toLowerCase() === targetSubject.toLowerCase() || 
-        c.name?.toLowerCase() === targetSubject.toLowerCase()
+        c.name?.toLowerCase() === (targetSection?.toLowerCase() || targetSubject.toLowerCase())
       );
 
       if (matchedClass) {
+        // SUCCESS: Direct hit, go to marking page
         hasRedirected.current = true;
-        // DIRECT HIT: Skip selection and go to the marking page
         navigate(`/attendance/${matchedClass.id}`, { replace: true });
+      } else {
+        // FAILURE: No class exists yet. Redirect to Dashboard to create it.
+        hasRedirected.current = true;
+        // We pass the subject and section to the dashboard auto-filler
+        navigate(`/dashboard?autoCreate=true&sub=${targetSubject}&name=${targetSection || ''}`, { replace: true });
       }
     }
   }, [location, classes, navigate]);
 
   return (
-    <div className="min-h-screen bg-[#06080f] text-slate-200 p-6 md:p-10 font-sans">
+    <div className="min-h-screen bg-[#06080f] text-slate-200 p-6 md:p-10 font-sans selection:bg-indigo-500/30">
       <div className="max-w-4xl mx-auto mt-10">
         
         <header className="mb-12 pb-8 border-b border-white/5">
@@ -47,7 +55,7 @@ export default function AttendanceHub({ classes = [] }) {
               <div 
                 key={c.id}
                 onClick={() => navigate(`/attendance/${c.id}`)}
-                className="group bg-[#111622] p-6 md:p-8 rounded-[30px] border border-white/5 cursor-pointer hover:border-indigo-500/40 transition-all flex items-center justify-between"
+                className="group bg-[#111622] p-6 md:p-8 rounded-[30px] border border-white/5 cursor-pointer hover:border-indigo-500/40 transition-all flex items-center justify-between shadow-xl"
               >
                 <div className="flex items-center gap-6">
                   <div className="w-14 h-14 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-indigo-500 font-black text-xl">
