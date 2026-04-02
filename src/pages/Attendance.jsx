@@ -159,7 +159,7 @@ export default function Attendance() {
                 onClick={handleEnableEdit}
                 className="flex-1 sm:flex-none px-8 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl text-[10px] font-black uppercase tracking-widest border border-white/10 transition-all"
               >
-                🔓 Unlock / Edit
+                Unlock / Edit
               </button>
             ) : (
               <button 
