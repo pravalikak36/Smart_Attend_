@@ -120,11 +120,42 @@ export default function Login({ onLogin }) {
             </button>
           </div>
 
-          <div className="mt-8 pt-8 border-t border-slate-800/30 flex justify-between items-center text-[10px] font-bold text-slate-600 uppercase tracking-tighter">
-            <span className="hover:text-indigo-400 cursor-pointer">Support</span>
-            <span className="text-slate-800">•</span>
-            <span className="text-emerald-500/60">System Online</span>
+      <div className="mt-8 pt-8 border-t border-slate-800/30 flex flex-col gap-4">
+        {/* Professional Branding & Message */}
+        <div className="text-center space-y-1">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+            Developed by <span className="text-indigo-500">Pravalika K</span>
+          </p>
+          <p className="text-[9px] text-slate-600 font-bold uppercase tracking-widest italic">
+            "We would be happy to hear from you"
+          </p>
+        </div>
+
+        <div className="flex justify-between items-center">
+          {/* THE REDIRECT BUTTON */}
+          <a 
+            href="https://mail.google.com/mail/u/0/?fs=1&tf=cm&source=mailto&to=pravalikak15036@gmail.com"
+            target="_blank" 
+            rel="noreferrer"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-indigo-500/20 transition-all active:scale-95"
+          >
+            <span className="text-xs"></span>
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              Contact Developer
+            </span>
+          </a>
+          {/* Status Indicator */}
+          <div className="flex items-center gap-2 bg-slate-900/50 px-3 py-1.5 rounded-full border border-white/5">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="text-emerald-500/80 uppercase tracking-widest text-[8px] font-black">
+              V1.0 Live
+            </span>
           </div>
+        </div>
+      </div>
         </div>
       </div>
     </div>
