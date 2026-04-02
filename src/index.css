@@ -53,32 +53,17 @@
 }
 
 @layer components {
-  .btn-glass {
-    /* The core Glassmorphism properties */
-    @apply h-14 px-10 rounded-full transition-all duration-300 
+  .btn-decepti {
+    /* Precise height and padding for the 'pill' look */
+    @apply h-14 px-10 rounded-[24px] transition-all duration-200 
            text-[12px] font-black uppercase tracking-[0.15em]
-           flex items-center justify-center
-           backdrop-blur-md border border-white/10
-           active:scale-95 shadow-2xl;
+           flex items-center justify-center border-none
+           active:scale-95 select-none outline-none;
   }
 
-  /* Blue Glass (PDF) */
-  .glass-pdf {
-    @apply bg-indigo-500/20 text-indigo-100 border-indigo-500/30
-           hover:bg-indigo-500/40 shadow-indigo-500/20;
-  }
-
-  /* Green Glass (WhatsApp) */
-  .glass-whatsapp {
-    @apply bg-emerald-500/20 text-emerald-100 border-emerald-500/30
-           hover:bg-emerald-500/40 shadow-emerald-500/20;
-  }
-
-  /* Neutral Glass (Test / Switch) */
-  .glass-neutral {
-    @apply bg-white/5 text-white/90 border-white/10
-           hover:bg-white/10;
-  }
+  /* Specific color overrides if you want to keep them in CSS */
+  .btn-whatsapp { @apply bg-[#10b981] text-white shadow-lg shadow-emerald-500/20; }
+  .btn-pdf { @apply bg-[#4f46e5] text-white shadow-lg shadow-indigo-500/20; }
 }
 
 /* Minimalist Scrollbar */
