@@ -30,4 +30,4 @@ Integrated the **WhatsApp Web API** and **jsPDF** to bridge digital records with
 * **Utilities:** jsPDF, Lucide-React
 
 ---
-*Developed by [Your Name] — Bridging the gap between code and classroom.*
+*Developed by Pravalika— Bridging the gap between code and classroom.
